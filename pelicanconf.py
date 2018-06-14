@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 AUTHOR = u'Serge Bouchut'
 SITENAME = u'Mon labo'
-SITEURL = ''
+SITEURL = 'https://sergebouchut.github.io'
 
 PATH = 'content'
 
@@ -13,7 +13,9 @@ TIMEZONE = 'Europe/Paris'
 DEFAULT_LANG = u'fr'
 
 # Feed generation is usually not desired when developing
-FEED_ALL_ATOM = None
+FEED_DOMAIN = SITEURL
+FEED_ALL_ATOM = 'feeds/all.atom.xml'
+FEED_ALL_RSS = 'feeds/all.rss.xml'
 CATEGORY_FEED_ATOM = None
 TRANSLATION_FEED_ATOM = None
 AUTHOR_FEED_ATOM = None
@@ -41,3 +43,4 @@ DEFAULT_PAGINATION = 10
 THEME = 'pelican-hyde'
 PROFILE_IMAGE = 'profile.png'
 BIO = u'Ingénieur logiciel #python'
+DISQUS_SITENAME = u'sergebouchut'
