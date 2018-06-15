@@ -2,16 +2,18 @@ Title: Le polymorphisme en Python
 Date: 2018-06-14 21:40
 Category: python
 
+![Harvey Dent holding coin]({filename}/images/batman.jpg)
+_The only morality in a cruel world is chance: unbiased, unprejudiced, fair._
 
-Le polymorphisme dit "paramétrique" est un des concepts clés de la programmation orientée objet. Il permet de définir plusieurs fonctions de même nom mais avec des signatures différentes (variant sur le nombre et le type d'argument). C'est aussi un bon moyen de segmenter le code par logique "métier".
+Le polymorphisme dit "paramétrique" est un des concepts clés de la programmation orientée objet. Il permet de définir plusieurs fonctions de même nom, mais avec des signatures différentes (variant sur le nombre et le type d'argument). C'est aussi un bon moyen de segmenter le code par logique "métier".
 
-Python répond nativement à ces besoins, grâce au typage dynamique (duck typing) des variables et à la séparation (unpacking) des arguments. Toutefois, c'est un bon exercice que d'en chercher une implémentation.
+Python répond nativement à ces besoins, grâce au typage dynamique des variables (duck typing) et à la séparation arguments (unpacking). Néanmoins, implémenter une structure polymorphe un exercice intéressant.
 
 Pour l’exemple, je souhaite obtenir une fonction `add` qui :
 
 - somme les arguments si ce sont des entiers ;
 - les concatène, avec des espaces, si ce sont chaînes ;
-- lever une exception sinon.ValueError.
+- lève une exception sinon.
 
 Par soucis de simplification, on admet que tous les arguments sont de même type.
 
@@ -38,25 +40,30 @@ assert add('hello', 'world') == 'hello world'
 assert add(True, False) raises ValueError
 ```
 
-_Note : par commodité, j'écris `assert ... raises ...`, bien que l'instruction n’existe pas. A l'occasion, j'en proposerai aussi une implémentation._
+_Note : par commodité, j'écris `assert ... raises ...`, bien que l'instruction n’existe pas.
 
-On a une fonction "technique" qui analyse le type d'argument et redirige vers les fonctions "métier" attendues.
+On a une fonction "noyau" qui analyse le type d'argument et redirige vers les fonctions "métier" attendues.
 
-L’implémentation fonctionne, mais elle est perfectible. En effet, à chaque ajout/retrait de fonction métier on doit aussi modifier la fonction générique. On souhaiterait d'avantage découpler la logique "technique" de la logique "métier".
+L’implémentation fonctionne, mais elle est perfectible. En effet, à chaque ajout d'une fonctionnalité métier on doit aussi modifier le code du noyau. On souhaiterait d'avantage découpler la logique "métier" de la logique "noyau".
 
 # Avec un décorateur
 
 ```python
 mapping = {}
+
 def register_add(arg_type):
+    "Dispatch `add` function calls."
+
     def register(func):
         mapping[arg_type] = func
+
         def run(*args):
             arg_type = type(args[0])
             if arg_type not in mapping:
                 raise ValueError
             return mapping[arg_type](*args)
         return run
+
     return register
 
 @register_add(NoneType)
@@ -72,9 +79,9 @@ def add_str(*words):
     return ' '.join(words)
 ```
 
-Cette fois-ci, c'est bon, on peut ajouter de nouvelles fonctions métiers sans toucher au noyau technique, grâce à l'usage du décorateur.
+Cette fois-ci, c'est bon, on peut ajouter de nouvelles fonctions métiers sans toucher au noyau, grâce à l'usage du décorateur.
 
-Cette implémentation requiert qu’au moins une des fonctions décorées soit nommée `add`, pour servir de point d’entrée. Ce ne sera pas forcément cette foncion qui sera réellement executée. Ce qui peut porter à confusion.
+Cette implémentation requiert qu’au moins une des fonctions "décorées" soit nommée `add`, pour servir de point d’entrée. La fonction appelée n'est forcément la fonction exécutée. Ce qui peut porter à confusion.
 
 ```python
 assert add_int(1, 2, 3) == 6  # no surprise
@@ -88,6 +95,7 @@ D’autre part, on aimerait regrouper le dictionnaire de "mapping" et la fonctio
 
 ```python
 class Add(object):
+    "Dispatch `add` function calls."
     _mapping = {}
 
     @classmethod
@@ -116,13 +124,16 @@ assert add(1, 2, 3) == 6
 assert add('hello', 'world') == 'hello world'
 ```
 
-_Note: Nul, besoin d’instancier la classe. Heureusement d'ailleurs car on a utiliser une valeur par défaut "muable" pour l'attribut de classe. C'est un piège en Python._
+_Note: Nul, besoin d’instancier la classe. Cela nous "autorise" à utiliser, à moindre risque, une valeur "muable" par défaut pour `_mapping`.
 
-Contrairement à d’autres langages, Python n’encourage pas à systématiquement utiliser des classes, si cela n’est pas nécessaire. Mais dans notre cas, j’y vois un gain notable dans la construction et la lisibilité du code.
+Contrairement à d’autres langages, Python n’encourage pas à systématiquement définir des classes, si cela n’est pas nécessaire. Mais dans notre cas, j’y vois un gain notable dans la construction et la lisibilité du code.
 
-Ce motif "dispatcher" peut permettre d’implémenter de nombreux cas d’usage autres que le polymorphisme. J'en propose quelques exemples.
+Ce motif "dispatcher" peut permettre d’implémenter de nombreux cas d’usage autres que le polymorphisme.
 
-# Avec les libs standards
+- <https://gist.github.com/SergeBouchut/be56b6f5dc01ade29782f9a16413fd7d>
+- <https://zestedesavoir.com/tutoriels/1226/le-pattern-dispatcher-en-python/>
+
+# Avec la lib standard
 
 ```python
 from functools import singledispatch
@@ -140,4 +151,4 @@ def _(*words):
     return ' '.join(words)
 ```
 
-En fait, il existe un décorateur pré-conçu à cet usage, disponible dans `functools` à partir de Python 3.4. Faut toujours penser à regarder dans les libs standards, on gagne du temps !
+Au final, `functools` propose un décorateur `singledispatch` conçu pour notre cas d'usage. C'est donc la meilleur solution (à partir de Python 3.4).
