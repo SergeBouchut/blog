@@ -1,9 +1,9 @@
 Title: Le polymorphisme en Python
-Date: 2018-06-14 21:40
-Category: python
+Date: 2018-06-14 20:00
+Category: dev
+Tags: python, poo
 
-![Harvey Dent holding coin]({filename}/images/batman.jpg)
-_The only morality in a cruel world is chance: unbiased, unprejudiced, fair._
+![Harvey Dent]({filename}/images/batman.jpg "The only morality in a cruel world is chance: unbiased, unprejudiced, fair.")
 
 Le polymorphisme dit "paramétrique" est un des concepts clés de la programmation orientée objet. Il permet de définir plusieurs fonctions de même nom, mais avec des signatures différentes (variant sur le nombre et le type d'argument). C'est aussi un bon moyen de segmenter le code par logique "métier".
 
