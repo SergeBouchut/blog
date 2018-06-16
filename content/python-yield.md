@@ -7,7 +7,7 @@ Tags: python, fp
 
 `yield` est une instruction bien connue des développeurs Python expérimentés, mais peu utilisée par les plus débutants. Pourtant, le concept est assez simple à appréhender et peut s'avérer pratique dans de nombreux cas.
 
-Yield peut se traduire par retourner / rendre / céder. En Python, il permet à une fonction de rendre la main, avant la fin de son exécution. Ce qui est opportun pour générer graduellement des valeurs (d'où l'appellation "générateur" qui en dérive). C’est aussi ce mécanisme qui est à l’œuvre dans les coroutines.
+Yield peut se traduire par retourner / rendre / céder. En Python, il permet à une fonction de rendre la main, avant la fin de son exécution. Ce qui est opportun pour exécuter graduellement du code (via un "générateur"). C’est aussi ce mécanisme qui est à l’œuvre dans les coroutines.
 
 Dans les tutoriels, je vois souvent des exemples de générateurs pour calculer des suites de nombres (suite de Fibonacci, nombres premiers, etc). J'ai envie de partager des exemples plus "utiles" dans mon quotidien de développeur.
 
@@ -17,7 +17,7 @@ _Note : pour le premier exemple, je compare des implémentations sans et avec g�
 
 Imaginons vouloir fournir un "endpoint" qui pagine les résultats par lot de 10 pour économiser de la bande passante. Pour l'exemple, la base de données, retourne simplement les lettres de l'alphabet, via `db.execute`.
 
-## Implémentation naive
+### Implémentation naive
 
 ```python
 def search(query, page):
@@ -31,19 +31,19 @@ def search(query, page):
 
 
 search('letters', page=1)
-Querying DB…
+Querying DB...
 ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
 
 search('letters', page=2)
-Querying DB…
+Querying DB...
 ['k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't']
 
 search('letters', page=3)
-Querying DB…
+Querying DB...
 ['u', 'v', 'w', 'x', 'y', 'z']
 
 search('letters', page=4)
-Querying DB…
+Querying DB...
 ValueError
 ```
 
@@ -52,7 +52,7 @@ Le code fonctionne mais pose quelques problèmes :
 - à chaque page, on fait une nouvelle requête en base, alors qu'on avait déjà récupéré les données,
 - le "consommateur" de notre endpoint doit connaître / gérer la page à charger.
 
-## Utilisation d'un cache
+### Utilisation d'un cache
 
 ```python
 cache = {}
@@ -78,7 +78,7 @@ def search(query):
 
 
 search('letters')
-Querying DB…
+Querying DB...
 ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
 
 search('letters')
@@ -96,7 +96,7 @@ On a résolus nos précédents problèmes, mais :
 - il y a collision si deux "consommateurs" envois la même requête,
 - le code commence à se complexifier alors que le problème est trivial.
 
-## Utilisation d'un générateur
+### Utilisation d'un générateur
 
 ```python
 def search(query):
@@ -110,7 +110,7 @@ def search(query):
 letters = search('letters')
 
 next(letters)
-Querying DB…
+Querying DB...
 ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
 
 next(letters)
@@ -129,7 +129,7 @@ On peut aussi générer toutes les valeurs d'un coup.
 
 ```python
 list(search('letters'))
-Querying DB…
+Querying DB...
 [['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'],
  ['k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't'],
  ['u', 'v', 'w', 'x', 'y', 'z']]
@@ -197,7 +197,54 @@ list(play('anna', 'john'))
 # infinite loop
 ```
 
-# Les entrées / sorties
+### Générateur en intension
+
+Pour finir en beauté, on reprend l'exemple du générateur cyclique en une seule ligne (remplaçant la boucle infinie par un nombre de tour max).
+
+```python
+game = (name for turn in range(4) for name in ('anna', 'john'))
+
+next(game)
+'anna'
+
+next(game)
+'john'
+
+next(game)
+'anna'
+
+list(game)
+['john, 'anna', 'john, 'anna', 'john]
+```
+
+_Note : la liste contient 5 éléments (au lieu de 8), les 3 premiers ayant déjà été "consommés"._
+
+# Parser des données
+
+Lorque l'on "parse" des données, il est courant de ne pas vouloir systématiquement récupérer toutes les occurences. `yield` nous offre toute la flexibilité de décider de continuer le "parsing" des données en dehors du code du "parser", selon le contexte.
+
+```python
+def parser(path, word):
+    with open(path) as f:
+        for line in f:
+            if word in line.split():
+                yield line
+
+find_error = parser('service.log', 'ERROR')
+while not_found:
+    error_line = next(find_error)
+    ...
+```
+
+# Chainer des traitements
+
+<https://zestedesavoir.com/articles/152/la-puissance-cachee-des-coroutines/#2-ya-du-monde-dans-le-pipe>
+```python
+def grepper(data, word):
+    yield
+```
+
+# Surveiller des entrées / sorties
 
 Imaginons vouloir lire en continue un fichier de log, alimenté par une source extérieur.
 
@@ -241,26 +288,6 @@ log.send('bar')
 # bar
 ```
 
-# Générateur en intension
-
-Pour finir en beauté, on reprend l'exemple du générateur cyclique en une seule ligne (remplaçant la boucle infinie par un nombre de tour max).
-
-```python
-game = (name for turn in range(4) for name in ('anna', 'john'))
-
-next(game)
-'anna'
-
-next(game)
-'john'
-
-next(game)
-'anna'
-
-list(game)
-['john, 'anna', 'john, 'anna', 'john]
-```
-
-_Note : la liste contient 5 éléments (au lieu de 8), les 3 premiers ayant déjà été "consommés"._
+Bien sûr, la grande force des générateurs, c'est aussi d'économiser de la RAM en ne chargeant pas d'un coup toutes les itérations. C'est vite significatif sur des volumes de données importants.
 
 J'espère qu'avec ces exemples, vous serez plus inspiré par `yield` à l'avenir. :)
