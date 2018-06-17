@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 
 AUTHOR = u'Serge Bouchut'
 SITENAME = u'terrarium'
-SITEURL = 'https://sergebouchut.github.io'
+SITEURL = 'https://sergebouchut.github.io/blog'
 
 PATH = 'content'
 
@@ -27,7 +27,6 @@ LINKS = (
     ('Pelican', 'http://getpelican.com/'),
     ('Python.org', 'http://python.org/'),
     ('Jinja2', 'http://jinja.pocoo.org/'),
-    ('You can modify those links in your config file', '#'),
 )
 
 # Social widget
@@ -45,5 +44,7 @@ DEFAULT_PAGINATION = 10
 
 THEME = 'pelican-hyde'
 PROFILE_IMAGE = 'profile.png'
-BIO = u'Ingénieur logiciel #python #linux, Lyon.'
+BIO = (u"Ingénieur logiciel #python #linux, Lyon. "
+       u"N\'hésitez pas à laisser des commentaires pour me compléter, "
+       u"me corriger, me poser des questions ou simplement m\'encourager ! :)")
 DISQUS_SITENAME = u'sergebouchut'

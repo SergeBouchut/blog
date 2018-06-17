@@ -1,4 +1,4 @@
-Title: Yield : cédez le passage
+Title: Yield : cédez la priorité
 Date: 2018-06-16 20:00
 Category: dev
 Tags: python, fp
@@ -17,7 +17,7 @@ _Note : pour le premier exemple, je compare des implémentations sans et avec g�
 
 Imaginons vouloir fournir un "endpoint" qui pagine les résultats par lot de 10 pour économiser de la bande passante. Pour l'exemple, la base de données, retourne simplement les lettres de l'alphabet, via `db.execute`.
 
-### Implémentation naive
+### 1- implémentation naive
 
 ```python
 def search(query, page):
@@ -52,7 +52,7 @@ Le code fonctionne mais pose quelques problèmes :
 - à chaque page, on fait une nouvelle requête en base, alors qu'on avait déjà récupéré les données,
 - le "consommateur" de notre endpoint doit connaître / gérer la page à charger.
 
-### Utilisation d'un cache
+### 2- utilisation d'un cache
 
 ```python
 cache = {}
@@ -96,7 +96,7 @@ On a résolus nos précédents problèmes, mais :
 - il y a collision si deux "consommateurs" envois la même requête,
 - le code commence à se complexifier alors que le problème est trivial.
 
-### Utilisation d'un générateur
+### 3- utilisation d'un générateur
 
 ```python
 def search(query):
@@ -197,9 +197,7 @@ list(play('anna', 'john'))
 # infinite loop
 ```
 
-### Générateur en intension
-
-Pour finir en beauté, on reprend l'exemple du générateur cyclique en une seule ligne (remplaçant la boucle infinie par un nombre de tour max).
+Enfin, on peut aussi déclarer le générateur "en intension". On ne peut pas lui envoyer de données via `send` et on définit une limite d'itérattion (ici un nombre de tour maximum).
 
 ```python
 game = (name for turn in range(4) for name in ('anna', 'john'))
@@ -217,32 +215,37 @@ list(game)
 ['john, 'anna', 'john, 'anna', 'john]
 ```
 
-_Note : la liste contient 5 éléments (au lieu de 8), les 3 premiers ayant déjà été "consommés"._
+_Note : la liste contient 5 éléments (au lieu des 8 qu'on pourrait attendre), les 3 premiers ayant déjà été "consommés"._
 
-# Parser des données
+# Parcourir / rechercher des données
 
-Lorque l'on "parse" des données, il est courant de ne pas vouloir systématiquement récupérer toutes les occurences. `yield` nous offre toute la flexibilité de décider de continuer le "parsing" des données en dehors du code du "parser", selon le contexte.
+La grande force des générateurs, c'est aussi d'économiser de la RAM en ne chargeant qu'une partie des données en mémoire. C'est vite significatif sur des volumes de données importants. On peut convertir n'importe quel itérable en générateur via `iter`.
 
 ```python
-def parser(path, word):
-    with open(path) as f:
-        for line in f:
-            if word in line.split():
-                yield line
-
-find_error = parser('service.log', 'ERROR')
-while not_found:
-    error_line = next(find_error)
-    ...
+def search_error(logs):
+    for log in iter(logs):
+        if log.startwith('ERROR'):
+            return log
 ```
 
-# Chainer des traitements
+`yield` nous offre toute la flexibilité de décider de continuer la recherche, si on souhaite d'avantage de résultats.
 
-<https://zestedesavoir.com/articles/152/la-puissance-cachee-des-coroutines/#2-ya-du-monde-dans-le-pipe>
 ```python
-def grepper(data, word):
-    yield
+def search_error(logs):
+    for log in iter(logs):
+        if log.startwith('ERROR'):
+            yield log
+
+log = search_error(logs)
+error = next(log)
+if 'HTTP_401_UNAUTHORIZED' in error:
+    # generate new token and retry
+elif 'HTTP_403_FORBIDDEN' in error:
+    # get more details in logs
+    details = next(log)
 ```
+
+Le point fort est que l'on n'a pas besoin de définir les critères pour continuer ou non la recherche dans la méthode du générateur qui peut rester générique.
 
 # Surveiller des entrées / sorties
 
@@ -288,6 +291,4 @@ log.send('bar')
 # bar
 ```
 
-Bien sûr, la grande force des générateurs, c'est aussi d'économiser de la RAM en ne chargeant pas d'un coup toutes les itérations. C'est vite significatif sur des volumes de données importants.
-
-J'espère qu'avec ces exemples, vous serez plus inspiré par `yield` à l'avenir. :)
+J'espère qu'avec ces exemples donneront un peu d'inspiration à ceux qui voudraient exploiter d'avantage le potentiel de `yield` et des générateurs. Je n'ai volontairement pas donner d'exemple de coroutines, parce que je souhaiterais écrire un billet spécifiquement sur ce sujet.

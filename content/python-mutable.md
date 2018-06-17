@@ -5,12 +5,12 @@ Tags: python
 
 ![Magneto]({filename}/images/xmen.jpg "Peace was never an option.")
 
-En python, certaines structures de données sont dites "mutables" : on peut en modifier les valeurs en conservant la même instance. Cela offre quelques propriétés intéressantes mais parfois dangereuses.
+En python, certaines structures de données sont dites "mutables" : on peut en modifier les valeurs en conservant la même instance. Cela offre quelques propriétés intéressantes mais parfois dangereuses pour un développeur non averti.
 
 Parmi les structures de données les plus courantes :
 
 - ne sont pas mutables : les tuples, les chaines et autres types de base ;
-- sont mutables : les listes, les dictionnaires, les objets.
+- sont mutables : les listes, les dictionnaires, les objets, etc.
 
 Pour s'en convaincre, on peut comparer les `id` avant et après modification.
 
@@ -26,7 +26,7 @@ id(xmens)
 139893504693696  # other id
 ```
 
-En revanche, dans le cas d'une liste, l'instance demeure (sauf si on ré-instancie explicitement la liste).
+En revanche, dans le cas d'une liste, l'instance demeure (sauf, bien sûr, si on ré-instancie explicitement la liste).
 
 ```python
 xmens = ['tornade', 'cyclope']
@@ -69,7 +69,7 @@ print(xmens)
 C'est pratique car cela :
 
 - évite de ré-instancier la liste `xmens` avec le résultat de la fonction `hire` ;
-- procure une syntaxe plus légère (surtout quand le nombre d'arguments augmente) ;
+- procure une syntaxe plus légère (surtout quand le nombre d'arguments augmente), donc plus lisible, donc plus maintenable ;
 - facilite l'écriture des fonctions récursives.
 
 # Premier danger : la copie
@@ -107,7 +107,7 @@ villains = deepcopy(xmens)
 
 # Second danger : les valeurs par défaut
 
-Autre comportements surprenant, si on définis un mutable comme valeur par défaut d'un argument d'une fonction. Dans l’exemple, on créer et retourne une nouvelle liste si aucune n’est fournie.
+Autre comportements surprenant, si on définis un mutable comme valeur par défaut d'un argument dans une fonction. Dans l’exemple, on créer et retourne une nouvelle liste si aucune n’est fournie.
 
 ```python
 def hire(mutant, team=[]):
@@ -159,7 +159,7 @@ hire.__defaults__
 
 Dans notre exemple, la valeur par défaut étant une propriété mutable, elle n'est pas à l'abris d'être modifiée lors de l'exécution de la fonction.
 
-Faut reconnaître que c’est un peu traître d'utiliser une valeur par défaut mutable et donc pas considéré comme une bonne pratique. Pylint, par exemple, affiche un message d’avertissement.
+Faut reconnaître que c’est un peu traître d'utiliser une valeur par défaut mutable et donc ce n'est pas considéré comme une bonne pratique. Pylint, par exemple, affiche un message d’avertissement.
 
 _W0102: Dangerous default value [] as argument._
 
@@ -229,14 +229,14 @@ Team.mutants == None
 
 Personnellement, même si je comprends les raisons techniques d'un tel comportement, je ne suis pas convaincu de son intérêt sur un plan pratique.
 
-Il y a bien d’autres manières, plus simples et plus explicites, de rendre des données persistantes entre des objets ou des appels de fonctions. Celle-ci étant, à mon goût, trop implicite et trop peu intuitive, se heurte aux dogmes fondamentaux du langages.
+Il y a bien d’autres manières, plus simples et plus explicites, de rendre des données persistantes entre des objets ou des appels de fonctions. Celle-ci est, à mon avis, trop implicite et trop peu intuitive, pour ne pas se heurter aux dogmes fondamentaux du langages.
 
 - _Explicit is better than implicit._
 - _Simple is better than complex._
 - _Practicality beats purity._
 - _There should be one — and preferably only one — obvious way to do it._
 
-J'imagine, qu'il existe une bonne raison d'avoir conserver un tel comportement mais je n'en ai pas trouvé d'explication.
+J'imagine, qu'il existe une bonne raison d'avoir conserver un tel comportement mais je n'en ai pas trouvé d'explication jusqu'à maintenant.
 
 _Note : les mutables ne seront pas acceptés en valeur par défaut des attributs des `Data Classes`, qui arrivent avec Python 3.7._
 

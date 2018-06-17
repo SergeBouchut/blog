@@ -10,3 +10,4 @@ todo:
 - decorator
 - unix commands
 - async / goto
+- unicode, utf8

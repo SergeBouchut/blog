@@ -33,7 +33,7 @@ git diff #2 #3
 git rebase #4
 ```
 
-On peut légitiment se questionner sur l'intérêt de manipuler directement des commits via leur hash, alors qu'on dispose d'outils plus "amicaux", à savoir les branches et les tags. Au quotidien, ça ne s'impose, occasionnelement ça permet, entre autres, de récuperer de l'historique que l'on croyait perdu.
+On peut légitiment se questionner sur l'intérêt de manipuler directement des commits via leur hash, alors qu'on dispose d'outils plus "amicaux", à savoir les branches et les tags. Au quotidien, cela ne s'impose pas. Mais occasionnelement, cela peut permettre de récuperer de l'historique que l'on croyait perdu.
 
 # Restaurer une branche / un tag supprimé
 
@@ -132,7 +132,8 @@ Le commit `#3` a disparu des radars, mais n'est pas perdu, seulement orphelin. E
 #2 add feature
 ```
 
-La documentation officielle de Git pour ~démolir~ modifier puis récupérer son historique 
+La documentation officielle de Git pour ~démolir~ modifier puis récupérer son historique.
+
 - <https://git-scm.com/book/fr/v1/Utilitaires-Git-R%C3%A9%C3%A9crire-l-historique>
 - <https://git-scm.com/book/fr/v1/Les-tripes-de-Git-Maintenance-et-r%C3%A9cup%C3%A9ration-de-donn%C3%A9es>
 
