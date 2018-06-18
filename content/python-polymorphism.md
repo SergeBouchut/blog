@@ -7,12 +7,12 @@ Tags: python, poo
 
 Le polymorphisme dit "paramétrique" est un des concepts clés de la programmation orientée objet. Il permet de définir plusieurs fonctions de même nom, mais avec des signatures différentes (variant sur le nombre et le type d'argument). C'est aussi un bon moyen de segmenter le code par logique "métier".
 
-Python répond nativement à ces besoins, grâce au typage dynamique des variables (duck typing) et à la séparation arguments (unpacking). Néanmoins, implémenter une structure polymorphe un exercice intéressant.
+Python répond nativement à ces besoins, grâce au typage dynamique des variables (duck typing) et à la séparation des arguments (unpacking). Néanmoins, implémenter une structure polymorphe est un exercice intéressant.
 
 Pour l’exemple, je souhaite obtenir une fonction `add` qui :
 
 - somme les arguments si ce sont des entiers ;
-- les concatène, avec des espaces, si ce sont chaînes ;
+- les concatène, avec des espaces, si ce sont des chaînes ;
 - lève une exception sinon.
 
 Par soucis de simplification, on admet que tous les arguments sont de même type.
@@ -37,10 +37,8 @@ def add_str(*words):
 
 assert add(1, 2, 3) == 6
 assert add('hello', 'world') == 'hello world'
-assert add(True, False) raises ValueError
+assert add(True, False)  # raises ValueError
 ```
-
-_Note : par commodité, j'écris `assert ... raises ...`, bien que l'instruction n’existe pas.
 
 On a une fonction "noyau" qui analyse le type d'argument et redirige vers les fonctions "métier" attendues.
 

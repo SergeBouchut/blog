@@ -74,7 +74,7 @@ C'est pratique car cela :
 
 # Premier danger : la copie
 
-En résulte un premier comportement qui peut surprendre : copier un mutable ne créer pas de nouvelle instance.
+En résulte un premier comportement qui peut surprendre : copier un mutable ne crée pas de nouvelle instance.
 
 ```python
 xmens = ['charles-xavier']
@@ -107,7 +107,7 @@ villains = deepcopy(xmens)
 
 # Second danger : les valeurs par défaut
 
-Autre comportements surprenant, si on définis un mutable comme valeur par défaut d'un argument dans une fonction. Dans l’exemple, on créer et retourne une nouvelle liste si aucune n’est fournie.
+Autre comportement surprenant : lorsque l'on définit un mutable comme valeur par défaut d'un argument dans une fonction. Dans l’exemple, on crée et retourne une nouvelle liste si aucune n’est fournie.
 
 ```python
 def hire(mutant, team=[]):
@@ -122,7 +122,7 @@ villains = hire('magneto')
 ['charles-xavier', 'magneto']  # not good
 ```
 
-Non, non, il semblerait que ce ne soit pas un anomalie, mais bien un "choix d'implémentation".
+Non, non, il semblerait que ce ne soit pas une anomalie, mais bien un "choix d'implémentation".
 
 La raison est que, en Python, les fonctions (tout comme les classes) sont des objets de première classe.
 
@@ -142,7 +142,7 @@ x('wolverine')
 ['wolverine']
 ```
 
-Les valeurs par défauts des arguments font aussi partis des propriétés de la fonction.
+Les valeurs par défaut des arguments font aussi partie des propriétés de la fonction.
 
 ```python
 hire.__defaults__
@@ -157,9 +157,9 @@ hire.__defaults__
 (['charles-xavier', 'magneto'],)
 ```
 
-Dans notre exemple, la valeur par défaut étant une propriété mutable, elle n'est pas à l'abris d'être modifiée lors de l'exécution de la fonction.
+Dans notre exemple, la valeur par défaut étant une propriété mutable, elle n'est pas à l'abri d'être modifiée lors de l'exécution de la fonction.
 
-Faut reconnaître que c’est un peu traître d'utiliser une valeur par défaut mutable et donc ce n'est pas considéré comme une bonne pratique. Pylint, par exemple, affiche un message d’avertissement.
+Faut reconnaître que c’est un comportement un peu traître. Ce n'est donc pas une bonne pratique d'utiliser un mutable en valeur par défaut. Pylint, par exemple, affiche un message d’avertissement.
 
 _W0102: Dangerous default value [] as argument._
 
@@ -187,7 +187,7 @@ hire.__defaults__
 (None,)
 ```
 
-Même problématique avec les valeurs par défaut des attributs de classe, qui eux non plus, ne sont pas à l'abris d'être modifiés entre les instances.
+Même problématique avec les valeurs par défaut des attributs de classe, qui eux non plus, ne sont pas à l'abri d'être modifiés entre les instances.
 
 ```python
 class Team:
@@ -229,14 +229,14 @@ Team.mutants == None
 
 Personnellement, même si je comprends les raisons techniques d'un tel comportement, je ne suis pas convaincu de son intérêt sur un plan pratique.
 
-Il y a bien d’autres manières, plus simples et plus explicites, de rendre des données persistantes entre des objets ou des appels de fonctions. Celle-ci est, à mon avis, trop implicite et trop peu intuitive, pour ne pas se heurter aux dogmes fondamentaux du langages.
+Il y a bien d’autres manières, plus simples et plus explicites, de rendre des données persistantes entre des objets ou des appels de fonction. Celle-ci est, à mon avis, trop implicite et trop peu intuitive, pour ne pas se heurter aux dogmes fondamentaux du langages.
 
 - _Explicit is better than implicit._
 - _Simple is better than complex._
 - _Practicality beats purity._
 - _There should be one — and preferably only one — obvious way to do it._
 
-J'imagine, qu'il existe une bonne raison d'avoir conserver un tel comportement mais je n'en ai pas trouvé d'explication jusqu'à maintenant.
+J'imagine, qu'il existe une bonne raison d'avoir conservé un tel comportement mais je n'ai pas encore trouvé d'explication.
 
 _Note : les mutables ne seront pas acceptés en valeur par défaut des attributs des `Data Classes`, qui arrivent avec Python 3.7._
 
