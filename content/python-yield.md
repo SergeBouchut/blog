@@ -399,26 +399,17 @@ def read(path, delimiter):
 
 def get_us_cars():
     reader = read('us_cars.csv', delimiter=';')
-    cars = []
-    while True:
-        try:
-            car = next(reader)
-        except StopIteration:
-            return cars
-
-        if filter_price(car, max_price=1000):
-            format_price(car, '$')
-            cars.append(car)
+    return [
+        # as format always return None, trick to run format
+        format_price(car, '$') or car
+        for car in readers
+        if filter_price(car, max_price=1000)
+    ]
 
 def get_eu_cars():
     reader = read('eu_cars.csv', delimiter=';')
     cars = []
-    while True:
-        try:
-            car = next(reader)
-        except StopIteration:
-            return cars
-
+    for car in reader:
         if (
             filter_price(car, max_price=1200) and
             filter_color(car, exclude=['blue']
@@ -429,6 +420,7 @@ def get_eu_cars():
             format_price(car, '€')
             format_name(car)
             cars.append(car)
+    return cars
 ```
 
 On obtient enfin toute la souplesse désirée dans la combinaison des opérations. Cela, sans polluer la fonction de lecture des données `read` qui devient minimaliste (et même indépendante du type d'objet lu).
