@@ -1,25 +1,32 @@
-Title: Yield : cédez la priorité
+Title: Yield, cédez la priorité
 Date: 2018-06-16 20:00
 Category: dev
 Tags: python, fp
+Description: Des exemples de générateurs utiles au quotidien du développeur.
+Image: las_vegas_parano.jpg
 
-![Johnny Depp / Benicio del Toro]({filename}/images/las_vegas_parano.jpg "We can’t stop here. This is bat country.")
+![Raoul Duke and Dr. Gonzo]({filename}/images/las_vegas_parano.jpg "We can’t stop here. This is bat country.")
 
 `yield` est une instruction bien connue des développeurs Python expérimentés, mais peu utilisée par les plus débutants. Pourtant, le concept est assez simple à appréhender et peut s'avérer pratique dans de nombreux cas.
 
-Yield peut se traduire par retourner / rendre / céder. En Python, il permet à une fonction de rendre la main, avant la fin de son exécution. Ce qui est opportun pour exécuter graduellement du code (via un "générateur"). C’est aussi ce mécanisme qui est à l’œuvre dans les coroutines.
+Yield peut se traduire par retourner / rendre / céder. En Python, il permet à une fonction de rendre la main, avant la fin de son exécution. Ce qui est opportun pour exécuter graduellement du code, via une structure de contrôle nommée "générateur". C’est aussi ce mécanisme qui est à l’œuvre dans les coroutines.
 
-Dans les tutoriels, je vois souvent des exemples de générateurs pour calculer des suites mathématiques (nombres premiers, Fibonacci, etc) ou d'autres opérations que je n'ai jamais eu besoin d'implémenter. J'ai envie de partager des exemples plus "utiles" dans mon quotidien de développeur.
+Dans les tutoriels, je vois souvent des exemples de générateurs pour calculer des suites mathématiques (nombres premiers, Fibonacci, etc) ou d'autres cas d'usage que je n'ai jamais eu besoin d'implémenter. J'ai envie de partager des exemples plus "utiles" dans mon quotidien de développeur.
 
-# La pagination
+# Paginer des résultats
 
-Imaginons vouloir fournir un "endpoint" qui pagine les résultats par lot de 10 pour économiser de la bande passante. Pour l'exemple, la base de données, retourne simplement les lettres de l'alphabet, via `db.execute`.
+On veut fournir une API qui pagine les résultats par lots pour économiser de la bande passante. Pour l'exemple, la base de données, retourne simplement les lettres de l'alphabet, via `db.execute`.
 
-### 1- implémentation naive
+### Sans générateur (implémentation naive)
 
 ```python
+def db_execute(query):
+    """Return letters of the alphabet."""
+    print('Querying DB...')
+    return list(string.ascii_lowercase)
+
 def search(query, page):
-    data = db.execute(query)
+    data = db_execute(query)
     count = ceil(len(data) / 10)
 
     if page not in range(1, count+1):
@@ -45,19 +52,19 @@ Querying DB...
 ValueError
 ```
 
-Le code fonctionne mais pose quelques problèmes :
+On répond au besoin, mais :
 
 - à chaque page, on fait une nouvelle requête en base, alors qu'on avait déjà récupéré les données ;
-- le "consommateur" de notre endpoint doit connaître / gérer la page à charger.
+- le "client" de notre API doit connaître / gérer la page à charger.
 
-### 2- utilisation d'un cache
+### Sans générateur (implémentation améliorée)
 
 ```python
 cache = {}
 
 def search(query):
     if query not in cache:
-        data = db.execute(query)
+        data = db_execute(query)
         count = ceil(len(data) / 10)
         cache[query] = {
             'data': data,
@@ -75,30 +82,30 @@ def search(query):
     return data[(page-1)*10 : page*10]
 
 
-search('letters')
+search('letters')  # client 1
 Querying DB...
 ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
 
-search('letters')
+search('letters')  # client 2
 ['k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't']
 
-search('letters')
+search('letters')  # client 1
 ['u', 'v', 'w', 'x', 'y', 'z']
 
-search('letters')
+search('letters')  # client 2
 StopIteration
 ```
 
 On a résolu nos précédents problèmes, mais :
 
-- il y a collision si deux "consommateurs" envoient la même requête ;
-- le code commence à se complexifier inutilement pour un problème trivial.
+- il y a collision si deux "clients" envoient la même requête ;
+- le code est trop complexe relativement au problème qui est trivial.
 
-### 3- utilisation d'un générateur
+### Avec générateur
 
 ```python
 def search(query):
-    data = db.execute(query)
+    data = db_execute(query)
     count = ceil(len(data) / 10)
 
     for page in range(1, count+1):
@@ -121,7 +128,7 @@ next(letters)
 StopIteration
 ```
 
-Plus besoin de cache, le code redevient simple. Plus de risque de collision, chaque "consommateur" instanciant son propre générateur.
+Plus besoin de cache, le code redevient simple. Plus de risque de collision, chaque "client" instanciant son propre générateur.
 
 On peut aussi générer toutes les valeurs d'un coup.
 
@@ -137,7 +144,7 @@ Querying DB...
 
 On peut sans risque, utiliser des boucles infinies dans le générateur, à condition de rendre la main à chaque tour. C’est idéal pour générer des valeurs cycliques.
 
-Imaginons vouloir connaître le joueur de la partie, dont c’est le tour de jouer.
+On veut connaître le joueur de la partie, dont c’est le tour de jouer.
 
 ```python
 def play(*players):
@@ -162,7 +169,7 @@ next(game)
 
 On peut même envoyer des données dans le générateur.
 
-Imaginons que l’on veuille ajouter un joueur, en cours de partie.
+On veut aussi pouvoir ajouter un joueur, en cours de partie.
 
 ```python
 def play(*players):
@@ -191,11 +198,10 @@ next(game)
 Attention, si on essaie de générer toutes les valeurs d’un coup, on tombe dans la boucle infinie !
 
 ```python
-list(play('anna', 'john'))
-# infinite loop
+list(play('anna', 'john'))  # infinite loop
 ```
 
-Enfin, on peut aussi déclarer le générateur en "intension". On ne peut pas lui envoyer de données via `send` et on définit une limite d'itération (ici un nombre maximum de tours).
+Enfin, on peut aussi déclarer le générateur en "intension". On ne peut pas lui envoyer de données via `send`. Par choix, on définit une limite d'itération (un nombre maximum de tours).
 
 ```python
 game = (name for turn in range(4) for name in ('anna', 'john'))
@@ -213,11 +219,68 @@ list(game)
 ['john, 'anna', 'john, 'anna', 'john]
 ```
 
-_Note : la liste contient 5 éléments (au lieu des 8 que l'on pourrait attendre), les 3 premiers ayant déjà été "consommés"._
+_Note : la liste contient 5 éléments (sur les 8 initiaux), les 3 premiers ayant déjà été "consommés"._
+
+# Vérifier une condition sur un ensemble
+
+### Sans générateur
+
+Sur un ensemble d'objet `cars`, on veut s'assurer qu'une condition `price_below` est respectée sur :
+
+- au moins un des objets via `any` ;
+- l'ensemble des objets via `all`.
+
+```python
+cars = [
+    {'name': 'Tesla_S', 'price': 70_000},
+    {'name': 'Dacia_Sandero', 'price': 11_000},
+    {'name': 'Porsche_Cayenne', 'price': 90_000},
+    {'name': 'Audi_A4', 'price': 30_000},
+]
+
+def price_below(car, max_price):
+    is_valid = car['price'] < max_price
+    print(f'Checking {car['name']}: {is_valid}')
+    return is_valid
+
+any([price_below(car, 20_000) for car in cars])
+Checking Tesla_S: False
+Checking Dacia_Sandero: True
+Checking Porsche_Cayenne: False
+Checking Audi_A4: False
+
+
+all([price_above(car, 80_000) for car in cars])
+Checking Tesla_S: False
+Checking Dacia_Sandero: False
+Checking Porsche_Cayenne: True
+Checking Audi_A4: False
+```
+
+On répond au besoin mais, on parcourt systématiquement l'ensemble des valeurs.
+
+### Avec générateur
+
+On veut stopper l'itération dès lors que l'on a :
+
+- un resultat positif qui valide notre `any` ;
+- un resultat négatif qui invalide notre `all`.
+
+```python
+any((price_below(car, 20_000) for car in cars))
+Checking Tesla_S: False
+Checking Dacia_Sandero: True
+
+
+all((price_below(car, 80_000) for car in cars))
+Checking Tesla_S: True
+Checking Dacia_Sandero: True
+Checking Porsche_Cayenne: False
+```
 
 # Surveiller des entrées / sorties
 
-Imaginons vouloir lire en continu un fichier de log, alimenté par une source extérieure.
+On veut contrôler en continu les entrées ajoutées à fichier de log.
 
 ```python
 def reader(path):
@@ -236,9 +299,7 @@ next(log)
 'foo\n'
 ```
 
-Sans `yield`, on devrait, à chaque fois, ouvrir puis refermer le fichier. Ce qui ne serait vraiment pas optimal.
-
-On voudrait aussi pouvoir écrire dans le même fichier.
+On veut aussi pouvoir écrire dans ce même fichier.
 
 ```python
 def reader_writer(path):
@@ -259,46 +320,14 @@ log.send('bar')
 # bar
 ```
 
-# Parcourir / rechercher des données
+# Orchestrer des opérations
 
-La grande force des générateurs, c'est aussi d'économiser de la RAM en ne chargeant qu'une partie des données en mémoire. Cela devient vite significatif sur des volumes de données importants. On peut convertir n'importe quel itérable en générateur via `iter`.
-
-```python
-def search_error(logs):
-    for log in iter(logs):
-        if log.startwith('ERROR'):
-            return log
-```
-
-`yield` nous offre toute la flexibilité de décider de continuer la recherche, si l'on souhaite d'avantage de résultats.
-
-```python
-def search_error(logs):
-    for log in iter(logs):
-        if log.startwith('ERROR'):
-            yield log
-
-log = search_error(logs)
-error = next(log)
-if 'HTTP_401_UNAUTHORIZED' in error:
-    # generate new token and retry
-elif 'HTTP_403_FORBIDDEN' in error:
-    # get more details in logs
-    details = next(log)
-```
-
-Le point fort est que l'on gère la poursuite de l'exécution de la recherche hors de la méthode `search_error`, qui peut rester agnostique au contexte.
-
-# Chaîner des traitements
-
-Imaginons vouloir récupérer des données depuis un fichier CSV en y appliquant diverses opérations de filtrage et de formatage, tout en évitant de :
+On veut récupérer des données depuis un fichier CSV en y appliquant diverses opérations de filtrage et de formatage, tout en évitant de :
 
 - charger en mémoire l'ensemble des données en même temps ;
 - parcourir plusieurs fois la liste des données.
 
-Ces critères sont plutôt simples à respecter, même sans utiliser `yield`.
-
-### 1- implémentation naive
+### Sans générateur (implémentation naive)
 
 ```python
 def filter_price(car, max_price):
@@ -307,124 +336,116 @@ def filter_price(car, max_price):
 def format_price(car, currency):
     car['price'] = '%s %.2f' % (currency, int(car['price']))
 
-def read_cars(path, delimiter):
-    with open(path) as f:
-        columns = f.readline().rstrip('\n').split(delimiter)
+def read_cars(country, max_price, currency):
+    if country not in ('fr', 'us'):
+        raise ValueError('Invalid country.')
+    with open('%s_cars.csv' % country) as f:
+        reader = csv.DictReader(f, delimiter=';')
+        assert reader.fieldnames == ['name', 'price', 'color']
         cars = []
-        for line in f:
-            car = dict(zip(columns, line.rstrip('\n').rstrip('\n').split(delimiter)))
-            if filter_price(car, max_price=1000):
-                format_price(car, currency='$')
+        for car in reader:
+            if filter_price(car, max_price=max_price):
+                format_price(car, currency=currency)
                 cars.append(car)
         return cars
 
-def get_cars():
-    return read_cars('cars.csv', delimiter=';')
+us_cars = read_cars('us', max_price=80_000, currency='$')
+fr_cars = read_cars('fr', max_price=90_000, currency='€')
 ```
 
-On complexifie le problème en faisant varier les paramètres des fonctions de filtrage et de formatage selon le contexte métier. Cela nous contraint à remonter ces paramètres dans la fonction parente `read_cars`.
+On repond au besoin mais :
+
+- la complexité de la fonction `read_cars` croît en fonction du nombre d'opérations ;
+- on ne pas faire varier les opérations selon le contexte.
+
+### Sans générateur (implémentation améliorée)
 
 ```python
-def get_us_cars():
-    return read_cars('us_cars.csv', delimiter=';',
-                     max_price='1000', currency='$')
+def filter_color(car, only_colors):
+    return car['color'] in only_colors
 
-def get_en_cars():
-    return read_cars('eu_cars.csv', delimiter=';',
-                     max_price='1200', currency='€')
-```
+def format_name(car, tag):
+    car['name'] += f' #{tag}'
 
-Cette fois, on ne veut plus seulement faire varier les valeurs, mais aussi faire varier les opérations exécutées selon le contexte métier.
-
-On pourrait faire le choix, d'ajouter des paramètres indiquant :
-
-- les opérations à exécuter, selon le contexte ;
-- les valeurs associées à ces opérations.
-
-Mais cela polluerait progressivement la fonction, à mesure, que le nombre d'opérations augmenterait. Il devient donc préférable de rassembler les opérations, en fonction de leur nature, avec leurs paramètres dans des structures de données.
-
-### 2- regroupement des opérations
-
-```python
-def read_cars(path, delimiter, filters, formatters):
-    with open(path) as f:
-        columns = f.readline().rstrip('\n').split(delimiter)
+def read_cars(country, filters, formatters):
+    if country not in ('fr', 'us'):
+        raise ValueError('Invalid country.')
+    with open('%s_cars.csv' % country) as f:
+        reader = csv.DictReader(f, delimiter=';')
+        assert reader.fieldnames == ['name', 'price', 'color']
         cars = []
-        for line in f:
-            car = dict(zip(columns, line.rstrip('\n').split(delimiter)))
-            if all((func(car, **kwargs) for func, kwargs in iter(filters))):
+        for car in reader:
+            if all((func(car, **kwargs) for func, kwargs in filters)):
                 for func, kwargs in iter(formatters):
                     func(car, **kwargs)
                 cars.append(car)
         return cars
 
 def get_us_cars():
-    filters = [(filter_price, {'max_price': 1000})]
+    filters = [(filter_price, {'max_price': 80_000})]
     formatters = [(format_price, {'currency': '$'})]
-    return read_cars('us_cars.csv', ';', filters, formatters)
+    return read_cars('us', filters, formatters)
 
-def get_eu_cars():
+def get_fr_cars():
     filters = [
-        (filter_price, {'max_price': 1200}),
-        (filter_color, {'exclude': ['blue']}),
-        (filter_price, {'max_price': 900}),  # make the first filter useless
+        (filter_price, {'max_price': 90_000}),
+        (filter_color, {'only_colors': ['yellow']}),
     ]
     formatters = [
         (format_price, {'currency': '€'}),
-        (format_name, {}),
+        (format_name, {'tag': 'rare'}),
     ]
-    return read_cars('en_cars.csv', ';', filters, formatters)
+    return read_cars('fr', filters, formatters)
 ```
 
-Note code est d'avantage extensible, on peut désormais :
-
-- exécuter plusieurs fois la même opération avec des valeurs différentes ;
-- définir des ordres d'éxecutions.
-
-En revanche, on ne peut toujours pas :
+Le code est d'avantage extensible, mais on ne peut toujours pas :
 
 - gérer un autre type d'opération (autre que filtrage ou formatage) ;
 - conditionner l'exécution d'une opération en fonction du résultat d'une précédente.
 
-On pourrait faire d'autres tentatives avec des structures de données et de contrôle plus sophistiquées. Mais cela introduirait trop de complexité pour un problème qui, au final, demeure trivial.
+_Note : on pourrait faire d'autres tentatives avec des structures plus sophistiquées. Mais le code serait trop complexe en comparaison du problème qui est trivial._
 
-### 3- utilisation d'un générateur
+### Avec générateur
 
 ```python
-def read(path, delimiter):
-    with open(path) as f:
-        columns = f.readline().rstrip('\n').split(delimiter)
-        for line in f:
-            yield dict(zip(columns, line.rstrip('\n').split(delimiter)))
+def read_cars(country):
+    if country not in ('fr', 'us'):
+        raise ValueError('Invalid country.')
+    with open('%s_cars.csv' % country) as f:
+        reader = csv.DictReader(f, delimiter=';')
+        assert reader.fieldnames == ['name', 'price', 'color']
+        for car in reader:
+            yield car
 
 def get_us_cars():
-    reader = read('us_cars.csv', delimiter=';')
-    return [
-        # as format always return None, trick to run format
-        format_price(car, '$') or car
-        for car in readers
-        if filter_price(car, max_price=1000)
-    ]
+    for car in read_cars('us'):
+        if filter_price(car, max_price=80_000):
+            format_price(car, '$')
+            yield car
 
-def get_eu_cars():
-    reader = read('eu_cars.csv', delimiter=';')
-    cars = []
-    for car in reader:
-        if (
-            filter_price(car, max_price=1200) and
-            filter_color(car, exclude=['blue']
-        ):
-            format_price(car, '€')
-            cars.append(car)
-        elif filter_price(car, max_price=900):
-            format_price(car, '€')
-            format_name(car)
-            cars.append(car)
-    return cars
+def get_fr_cars():
+    for car in read_cars('fr'):
+        if filter_color(car, only_colors=['yellow']:
+            format_name(car, tag='rare')
+        elif filter_price(car, max_price=20_000):
+            format_name(car, tag='cheap')
+        elif not filter_price(car, max_price=90_000):
+            continue
+        format_price(car, '€')
+        yield car
+
+us_cars = list(get_us_cars())
+fr_cars = list(get_fr_cars())
 ```
 
-On obtient enfin toute la souplesse désirée dans la combinaison des opérations. Cela, sans polluer la fonction de lecture des données `read` qui devient minimaliste (et même indépendante du type d'objet lu).
+On obtient enfin toute la souplesse désirée dans la combinaison des opérations. Cela, sans "polluer" la fonction de lecture des données `read_cars`.
 
 ---
+
+Grâce aux générateurs :
+
+- on économise la mémoire en ne chargeant pas l'ensemble des données d'un coup ;
+- on économise le processeur en n'exécutant pas plus d'instructions que nécessaire ;
+- on segmente mieux le code, en donnant le contrôle de l'exécution des couches inférieures aux couches supérieures.
 
 J'espère que ces exemples donneront un peu d'inspiration à ceux qui voudraient exploiter d'avantage le potentiel de `yield` et des générateurs. Je n'ai volontairement pas donné d'exemple de coroutines, parce que je souhaiterais écrire un billet spécifiquement sur ce sujet.
