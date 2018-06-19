@@ -2,6 +2,8 @@ Title: Le polymorphisme en Python
 Date: 2018-06-14 20:00
 Category: dev
 Tags: python, poo
+Description: Le motif "dispatcher" appliqué au polymorphisme.
+Image: batman.jpg
 
 ![Harvey Dent]({filename}/images/batman.jpg "The only morality in a cruel world is chance: unbiased, unprejudiced, fair.")
 

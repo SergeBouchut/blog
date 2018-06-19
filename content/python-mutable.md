@@ -2,6 +2,9 @@ Title: Faire la paix avec les mutables
 Date: 2018-06-17 20:00
 Category: dev
 Tags: python
+Description: Les écueils à éviter lorsqu'on utilise des structures mutables.
+Image: xmen.jpg
+
 
 ![Magneto]({filename}/images/xmen.jpg "Peace was never an option.")
 

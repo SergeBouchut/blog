@@ -2,7 +2,7 @@ Title: Yield, cédez la priorité
 Date: 2018-06-16 20:00
 Category: dev
 Tags: python, fp
-Description: Des exemples de générateurs utiles au quotidien du développeur.
+Description: Des exemples de générateurs en Python, pour donner envie de les utiliser plus souvent.
 Image: las_vegas_parano.jpg
 
 ![Raoul Duke and Dr. Gonzo]({filename}/images/las_vegas_parano.jpg "We can’t stop here. This is bat country.")
@@ -15,7 +15,7 @@ Dans les tutoriels, je vois souvent des exemples de générateurs pour calculer 
 
 # Paginer des résultats
 
-On veut fournir une API qui pagine les résultats par lots pour économiser de la bande passante. Pour l'exemple, la base de données, retourne simplement les lettres de l'alphabet, via `db.execute`.
+On veut fournir une API qui pagine les résultats par lots pour économiser de la bande passante.
 
 ### Sans générateur (implémentation naive)
 
@@ -52,12 +52,14 @@ Querying DB...
 ValueError
 ```
 
-On répond au besoin, mais :
+La pagination fonctionne comme attendu, mais :
 
 - à chaque page, on fait une nouvelle requête en base, alors qu'on avait déjà récupéré les données ;
 - le "client" de notre API doit connaître / gérer la page à charger.
 
 ### Sans générateur (implémentation améliorée)
+
+On ajoute un système de cache.
 
 ```python
 cache = {}
@@ -96,12 +98,11 @@ search('letters')  # client 2
 StopIteration
 ```
 
-On a résolu nos précédents problèmes, mais :
-
-- il y a collision si deux "clients" envoient la même requête ;
-- le code est trop complexe relativement au problème qui est trivial.
+Plus de requête redondante, ni de page à gérer, mais il y a un risque de collision si deux clients envoient la même requête. On pourrait encore étoffer l'implémentation mais le code devient trop complexe relativement au problème qui est trivial.
 
 ### Avec générateur
+
+On utilise un générateur.
 
 ```python
 def search(query):
@@ -201,7 +202,7 @@ Attention, si on essaie de générer toutes les valeurs d’un coup, on tombe da
 list(play('anna', 'john'))  # infinite loop
 ```
 
-Enfin, on peut aussi déclarer le générateur en "intension". On ne peut pas lui envoyer de données via `send`. Par choix, on définit une limite d'itération (un nombre maximum de tours).
+Enfin, on peut aussi déclarer le générateur en "intension". On ne peut pas lui envoyer de données via `send`. Par choix, on définit un nombre maximum d'itérations.
 
 ```python
 game = (name for turn in range(4) for name in ('anna', 'john'))
@@ -250,14 +251,14 @@ Checking Porsche_Cayenne: False
 Checking Audi_A4: False
 
 
-all([price_above(car, 80_000) for car in cars])
-Checking Tesla_S: False
-Checking Dacia_Sandero: False
-Checking Porsche_Cayenne: True
-Checking Audi_A4: False
+all([price_below(car, 80_000) for car in cars])
+Checking Tesla_S: True
+Checking Dacia_Sandero: True
+Checking Porsche_Cayenne: False
+Checking Audi_A4: True
 ```
 
-On répond au besoin mais, on parcourt systématiquement l'ensemble des valeurs.
+On vérifie bien les conditions mais on parcourt systématiquement l'ensemble des valeurs alors que ce n'est pas nécessaire.
 
 ### Avec générateur
 
@@ -280,7 +281,7 @@ Checking Porsche_Cayenne: False
 
 # Surveiller des entrées / sorties
 
-On veut contrôler en continu les entrées ajoutées à fichier de log.
+On veut contrôler en continu les entrées ajoutées à un fichier de log.
 
 ```python
 def reader(path):
@@ -356,7 +357,7 @@ fr_cars = read_cars('fr', max_price=90_000, currency='€')
 On repond au besoin mais :
 
 - la complexité de la fonction `read_cars` croît en fonction du nombre d'opérations ;
-- on ne pas faire varier les opérations selon le contexte.
+- on ne sait pas faire varier les opérations exécutées selon le contexte.
 
 ### Sans générateur (implémentation améliorée)
 

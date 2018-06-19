@@ -2,6 +2,8 @@ Title: Retrouver son historique Git
 Date: 2018-06-15 20:00
 Category: dev
 Tags: git
+Description: Mieux comprendre Git pour se sortir de situations épineuses.
+Image: sherlock.jpg
 
 
 ![Sherlock Holmes]({filename}/images/sherlock.jpg "Because you're an idiot. No, no, no. Don't look like that. Practically everyone is.")
