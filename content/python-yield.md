@@ -74,7 +74,7 @@ def search(query):
             'page': 1,
         }
 
-    data, count, page = cache[query].values()
+    data, count, page = cache[query].values()  # from Python 3.7
 
     if page > count:
         del cache[query]  # clean the cache
