@@ -33,7 +33,6 @@ LINKS = (
 SOCIAL = (
     ('github', 'https://github.com/SergeBouchut/'),
     ('linkedin', 'https://www.linkedin.com/in/sergebouchut/'),
-    ('email', 'serge.bouchut+blog@gmail.com'),
     ('meetup', 'https://www.meetup.com/fr-FR/members/190950919/'),
 )
 
